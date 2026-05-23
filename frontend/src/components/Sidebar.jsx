@@ -1,11 +1,12 @@
 import { useEffect, useState, useTransition } from 'react'
-import { Link, useLocation } from "react-router-dom"
+import { Link, useLocation , useNavigate} from "react-router-dom"
 import { dummyProfileData } from "../assets/assets"
 import { Calendar1Icon, ChevronRightIcon, DollarSignIcon, FileTextIcon, LayoutGridIcon, LogOutIcon, Menu as MenuIcon, SettingsIcon, User as UserIcon, XIcon } from "lucide-react"
 
 const Sidebar = () => {
 
     const { pathname } = useLocation()
+    const navigate = useNavigate()
     const [userName, setUserName] = useState("")
     const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -41,8 +42,9 @@ const Sidebar = () => {
 
     const handleLogout = () => {
         // Implement logout logic here (e.g., clear tokens, redirect to login page)
-        window.location.href = "/login" // Redirect to login page
+        // Redirect to login page
         console.log("User logged out")
+        navigate("/login")
     }
 
     const sidebarContent = (
@@ -107,7 +109,7 @@ const Sidebar = () => {
 
         {/* Logout Button */}
         <div className='p-3 border-t border-white/6'>
-            <button onClick={handleLogout} className='flex items-center gap-3 w-full px-3 py-2.5 rounded-md text-[13px] font-medium text-slate-400 hover:text-rose-400 hover:
+            <button onClick={handleLogout} className='flex items-center gap-3 w-full px-3 py-2.5 rounded-md text-[13px] font-medium text-slate-400 hover:text-rose-400
             hover:bg-rose-500/8 transition-all duration-150'>
                 <LogOutIcon className='w-[17px] h-[17px]'/>
                 <span className=''>Logout</span>
@@ -136,7 +138,7 @@ const Sidebar = () => {
         </aside>
 
         {/* Sidebar - Mobile */}
-        <aside className={`g:hidden fixed top-0 left-0 inset-y-0 h-full w-[260px] bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-white z-50 transform ${mobileOpen ? "translate-x-0" : "-translate-x-full"} transition-transform duration-300`}>
+        <aside className={`lg:hidden fixed top-0 left-0 inset-y-0 h-full w-[260px] bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-white z-50 transform ${mobileOpen ? "translate-x-0" : "-translate-x-full"} transition-transform duration-300`}>
             {sidebarContent}
         </aside>
 
