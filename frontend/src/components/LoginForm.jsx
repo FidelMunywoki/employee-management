@@ -15,7 +15,28 @@ const LoginForm = ({role, title, subtitle}) => {
         e.preventDefault()
         setError("")
         setLoading(true)
+        try { 
+            // Simulate API call
+            await new Promise((resolve) => setTimeout(resolve, 2000))
+
+            // For demo, we just check if email and password are not empty
+            if (!email || !password) {
+                throw new Error("Please enter both email and password")
+            }
+        } catch (err) {
+        setError("Sign in failed. Please try again.")
+    } finally {
+        setLoading(false)
     }
+
+            // In real implementation, you would call your API here and handle authentication
+            // Example:
+            // const response = await api.login({ email, password, role })
+            // Handle response, store tokens, redirect, etc
+
+        
+    }
+ 
 
 
 
