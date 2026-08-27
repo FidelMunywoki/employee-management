@@ -28,11 +28,11 @@ const Sidebar = () => {
         }
     }, [pathname, mobileOpen, startTransition])
 
-    const role = "Admin" || "Employee"; // This should come from your auth context or API
+    const role = "" || "EMPLOYEE"; // This should come from your auth context or API
 
     const navigationItems = [
         { name: "Dashboard", href: "/dashboard", icon: LayoutGridIcon },
-        role === "Admin" ? 
+        role === "ADMIN" ? 
         { name: "Employee", href: "/employee", icon: UserIcon } :
         { name: "Attendance", href: "/attendance", icon: Calendar1Icon },
         { name: "Leave", href: "/leave", icon: FileTextIcon },
@@ -79,7 +79,7 @@ const Sidebar = () => {
                 </div>
                 <div className='min-w-0'>
                     <p className='text-[13px] font-medium text-slate-200 truncate'>{userName || "Loading..."}</p>
-                    <p className='text-[11px] text-slate-500 truncate'>{role === "Admin" ? "Admin" : "Employee"}</p>
+                    <p className='text-[11px] text-slate-500 truncate'>{role === "ADMIN" ? "Admin" : "Employee"}</p>
                 </div>
             </div>
         </div>
