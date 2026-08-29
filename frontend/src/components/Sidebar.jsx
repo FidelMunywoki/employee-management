@@ -28,7 +28,7 @@ const Sidebar = () => {
         }
     }, [pathname, mobileOpen, startTransition])
 
-    const role = "" || "EMPLOYEE"; // This should come from your auth context or API
+    const role = "" || "ADMIN"; // This should come from your auth context or API
 
     const navigationItems = [
         { name: "Dashboard", href: "/dashboard", icon: LayoutGridIcon },
