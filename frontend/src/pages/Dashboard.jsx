@@ -1,19 +1,19 @@
 import { useEffect, useState } from "react"
-import { dummyAdminDashboardData } from "../assets/assets"
+import { dummyEmployeeDashboardData } from "../assets/assets"
 import Loading from "../components/Loading"
 import EmployeeDashboard from "../components/EmployeeDashboard"
 import AdminDashboard from "../components/AdminDashboard"
 
 const Dashboard = () => {
 
-  const [data] = useState(dummyAdminDashboardData)
+  const [data] = useState(dummyEmployeeDashboardData)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     // Simulate loading delay
     const timer = setTimeout(() => {
       setLoading(false)
-    }, 1000)
+    }, 0) // Adjust the delay as needed
 
     return () => clearTimeout(timer)
   }, [])
