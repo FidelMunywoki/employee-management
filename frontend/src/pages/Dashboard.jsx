@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react"
-import { dummyEmployeeDashboardData } from "../assets/assets"
+import { dummyEmployeeDashboardData, dummyAdminDashboardData } from "../assets/assets"
 import Loading from "../components/Loading"
 import EmployeeDashboard from "../components/EmployeeDashboard"
+import AdminDashboard from "../components/AdminDashboard"
 
 const Dashboard = () => {
 
-  const [data] = useState(dummyEmployeeDashboardData)
+  const [data] = useState(dummyAdminDashboardData)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -21,7 +22,7 @@ const Dashboard = () => {
   if(!data) return <p className="text-center text-slate-500 py-12">No data available</p>
 
   if(data.role === "ADMIN") {
-    return  <div>Admin Dashboard</div>
+    return  <AdminDashboard data={data} />
   } else {
     return <EmployeeDashboard data={data} />
   }
