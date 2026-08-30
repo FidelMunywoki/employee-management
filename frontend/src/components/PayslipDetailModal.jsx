@@ -62,7 +62,7 @@ const PayslipDetailModal = ({ payslip, onClose }) => {
             Close
           </button>
           <button
-            onClick={() => navigate(`/print-payslip/${payslip._id}`)}
+            onClick={() => navigate(`/print/payslip/${payslip._id}`)}
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition"
           >
             <Printer size={16} /> Print
