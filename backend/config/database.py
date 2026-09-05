@@ -18,8 +18,8 @@ class Base(DeclarativeBase):
 async def connect_db():
     try:
         async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-        print("PostgreSQL connected and tables synced")
+            await conn.run_sync(lambda sync_conn: None)  # just verifies connectivity
+        print("PostgreSQL connected")
     except Exception as e:
         print(f"PostgreSQL connection failed: {e}")
         raise

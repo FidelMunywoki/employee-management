@@ -1,0 +1,27 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.Python
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Alembic — keep the migration scripts, ignore local cache
+alembic/__pycache__/
+
+# One-off local scripts (contains a hardcoded seed password)
+seed_admin.py
+
+# Editor/OS cruft
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Logs
+*.log

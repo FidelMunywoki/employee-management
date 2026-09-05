@@ -5,3 +5,7 @@ asyncpg
 python-dotenv
 pydantic
 alembic
+bcrypt
+python-jose[cryptography]
+python-multipart
+email-validator
