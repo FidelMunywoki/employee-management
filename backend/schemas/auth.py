@@ -23,5 +23,5 @@ class EmployeeOut(BaseModel):
     department: str
     position: str
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
+        
