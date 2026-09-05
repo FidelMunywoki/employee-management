@@ -1,8 +1,13 @@
 import uuid
 from datetime import datetime, timezone, date
+from typing import TYPE_CHECKING
+
 from sqlalchemy import String, Date, DateTime, Text, ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from config.database import Base
+
+if TYPE_CHECKING:
+    from .employee import Employee
 
 
 class Leave(Base):
@@ -22,3 +27,5 @@ class Leave(Base):
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
+
+    employee: Mapped["Employee"] = relationship("Employee", lazy="selectin")
