@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 
 from config.database import connect_db
 import models  # ensures all models are registered with Base before create_all runs
-from routes import auth, employees, attendance, leave 
+from routes import auth, employees, attendance, leave, payslips, settings
 
 # from routes import auth, employees, payslips, leave, attendance
 
@@ -39,10 +39,10 @@ def root():
 
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(employees.router, prefix="/api/employees", tags=["employees"])
-# app.include_router(payslips.router, prefix="/api/payslips", tags=["payslips"])
+app.include_router(payslips.router, prefix="/api/payslips", tags=["payslips"])
 app.include_router(leave.router, prefix="/api/leave", tags=["leave"])
 app.include_router(attendance.router, prefix="/api/attendance", tags=["attendance"])
-
+app.include_router(settings.router, prefix="/api/settings", tags=["settings"])
 
 if __name__ == "__main__":
     import uvicorn

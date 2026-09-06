@@ -105,16 +105,29 @@ async def test_get_nonexistent_employee(client, admin_token):
 
 # ---------- Update (self) ----------
 
-async def test_update_own_profile(client, employee_token, employee_user):
+async def test_update_own_bio(client, employee_token):
     response = await client.patch(
         "/api/employees/me",
         headers=await auth_headers(employee_token),
-        json={"bio": "Updated bio", "phone": "555-1234"},
+        json={"bio": "Updated bio"},
+    )
+    assert response.status_code == 200
+    assert response.json()["bio"] == "Updated bio"
+
+
+async def test_self_update_cannot_change_name_or_phone(client, employee_token, employee_user):
+    response = await client.patch(
+        "/api/employees/me",
+        headers=await auth_headers(employee_token),
+        json={"first_name": "Hacked", "last_name": "Name", "phone": "555-0000", "bio": "Legit bio"},
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["bio"] == "Updated bio"
-    assert data["phone"] == "555-1234"
+    # Extra fields are silently dropped by the narrowed schema — only bio applies
+    assert data["bio"] == "Legit bio"
+    assert data["first_name"] == employee_user.first_name
+    assert data["last_name"] == employee_user.last_name
+    assert data["phone"] == employee_user.phone
 
 
 async def test_self_update_cannot_change_salary(client, employee_token):

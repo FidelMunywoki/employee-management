@@ -40,9 +40,9 @@ class EmployeeUpdateAdmin(BaseModel):
 class EmployeeUpdateSelf(BaseModel):
     # Employee editing their own profile — deliberately excludes email,
     # salary, department, role, status: those stay admin-only
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    phone: Optional[str] = None
+    # first_name: Optional[str] = None  name, phone numbers are changed by admin only
+    # last_name: Optional[str] = None
+    # phone: Optional[str] = None
     bio: Optional[str] = None
 
 

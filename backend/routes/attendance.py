@@ -10,11 +10,12 @@ from models.employee import Employee
 from models.attendance import Attendance
 from schemas.attendance import AttendanceOut, AttendanceSummary
 from dependencies.auth import get_current_employee, require_admin
+from routes.settings import get_or_create_settings
 
 router = APIRouter()
 
-LATE_CUTOFF_HOUR = 9
-LATE_CUTOFF_MINUTE = 15
+# LATE_CUTOFF_HOUR = 9
+# LATE_CUTOFF_MINUTE = 15
 
 
 def compute_day_type(working_hours: float) -> str:
@@ -46,8 +47,9 @@ async def clock_in(
             detail="You've already clocked in today",
         )
 
+    settings = await get_or_create_settings(db)
     now = datetime.now(timezone.utc)
-    is_late = (now.hour, now.minute) > (LATE_CUTOFF_HOUR, LATE_CUTOFF_MINUTE)
+    is_late = (now.hour, now.minute) > (settings.late_cutoff_hour, settings.late_cutoff_minute)
 
     record = Attendance(
         id=str(uuid.uuid4()),

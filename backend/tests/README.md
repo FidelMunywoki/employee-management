@@ -1,5 +1,5 @@
 ### Run Tests (all test files)
-<!-- docker compose exec backend pytest -v -->
+docker compose exec backend pytest -v 
 
 ### Run Tests for one file
 
