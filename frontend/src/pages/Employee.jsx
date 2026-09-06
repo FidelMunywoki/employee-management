@@ -1,17 +1,63 @@
 import { Plus, Search, ChevronDown } from "lucide-react"
-import { useMemo, useState } from "react"
-import { dummyEmployeeData, DEPARTMENTS } from "../assets/assets"
+import { useEffect, useMemo, useState } from "react"
+import { DEPARTMENTS } from "../assets/assets"
+import { api } from "../api/client"
+import { useAuth } from "../context/useAuth"
 import EmployeeCard from "../components/EmployeeCard"
 import EditEmployeeModal from "../components/EditEmployeeModal"
 import AddEmployeeModal from "../components/AddEmployeeModal"
+import Loading from "../components/Loading"
+import toast from "react-hot-toast"
+
+// Backend (snake_case) -> frontend (camelCase, _id) shape used by
+// EmployeeCard / EditEmployeeModal / AddEmployeeModal
+const fromApi = (e) => ({
+  _id: e.id,
+  firstName: e.first_name,
+  lastName: e.last_name,
+  email: e.email,
+  phone: e.phone,
+  department: e.department,
+  position: e.position,
+  basicSalary: e.basic_salary,
+  allowances: e.allowances,
+  deductions: e.deductions,
+  employmentStatus: e.employment_status,
+  bio: e.bio,
+  joinDate: e.join_date,
+  image: e.image,
+  role: e.role,
+})
 
 const Employee = () => {
-  const [employees, setEmployees] = useState(dummyEmployeeData)
-  const [search, setSearch] = useState("");
-  const [selectedDeptartment, setSelectedDepartment] = useState("");
+  const { token } = useAuth()
+  const [employees, setEmployees] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState("")
+  const [selectedDeptartment, setSelectedDepartment] = useState("")
   const [showDeptMenu, setShowDeptMenu] = useState(false)
   const [editingEmployee, setEditingEmployee] = useState(null)
   const [showAddModal, setShowAddModal] = useState(false)
+
+  useEffect(() => {
+    let isActive = true
+
+    const load = async () => {
+      try {
+        const data = await api.get("/employees/", token)
+        if (isActive) setEmployees(data.map(fromApi))
+      } catch (err) {
+        toast.error(err.message || "Failed to load employees")
+      } finally {
+        if (isActive) setLoading(false)
+      }
+    }
+
+    load()
+    return () => {
+      isActive = false
+    }
+  }, [token])
 
   const filteredEmployees = useMemo(() => {
     return employees.filter((emp) => {
@@ -25,25 +71,76 @@ const Employee = () => {
     })
   }, [employees, search, selectedDeptartment])
 
-  const handleDelete = (employee) => {
+  const handleDelete = async (employee) => {
     const confirmed = window.confirm(
       `Remove ${employee.firstName} ${employee.lastName}? This can't be undone.`
     )
     if (!confirmed) return
-    setEmployees((prev) => prev.filter((e) => e._id !== employee._id))
+
+    try {
+      await api.delete(`/employees/${employee._id}`, token)
+      setEmployees((prev) => prev.filter((e) => e._id !== employee._id))
+      toast.success("Employee removed")
+    } catch (err) {
+      toast.error(err.message || "Failed to delete employee")
+    }
   }
 
-  const handleSaveEdit = (updatedEmployee) => {
-    setEmployees((prev) =>
-      prev.map((e) => (e._id === updatedEmployee._id ? updatedEmployee : e))
-    )
-    setEditingEmployee(null)
+  const handleSaveEdit = async (updatedEmployee) => {
+    try {
+      const payload = {
+        first_name: updatedEmployee.firstName,
+        last_name: updatedEmployee.lastName,
+        email: updatedEmployee.email,
+        phone: updatedEmployee.phone,
+        department: updatedEmployee.department,
+        position: updatedEmployee.position,
+        basic_salary: updatedEmployee.basicSalary,
+        allowances: updatedEmployee.allowances,
+        deductions: updatedEmployee.deductions,
+        employment_status: updatedEmployee.employmentStatus,
+        role: updatedEmployee.role,
+        bio: updatedEmployee.bio,
+        join_date: updatedEmployee.joinDate || null,
+      }
+      const saved = await api.patch(`/employees/${updatedEmployee._id}`, payload, token)
+      setEmployees((prev) =>
+        prev.map((e) => (e._id === saved.id ? fromApi(saved) : e))
+      )
+      setEditingEmployee(null)
+      toast.success("Employee updated")
+    } catch (err) {
+      toast.error(err.message || "Failed to update employee")
+    }
   }
 
-  const handleCreate = (newEmployee) => {
-    setEmployees((prev) => [newEmployee, ...prev])
-    setShowAddModal(false)
+  const handleCreate = async (newEmployee) => {
+    try {
+      const payload = {
+        first_name: newEmployee.firstName,
+        last_name: newEmployee.lastName,
+        email: newEmployee.email,
+        password: newEmployee.password,
+        phone: newEmployee.phone,
+        department: newEmployee.department,
+        position: newEmployee.position,
+        basic_salary: newEmployee.basicSalary,
+        allowances: newEmployee.allowances,
+        deductions: newEmployee.deductions,
+        role: newEmployee.role,
+        bio: newEmployee.bio,
+        join_date: newEmployee.joinDate || null,
+      }
+      const created = await api.post("/employees/", payload, token)
+      setEmployees((prev) => [fromApi(created), ...prev])
+      setShowAddModal(false)
+      toast.success("Employee created")
+    } catch (err) {
+      toast.error(err.message || "Failed to create employee")
+    }
   }
+
+  if (loading) return <Loading />
 
   return (
     <div className="animate-fade-in">

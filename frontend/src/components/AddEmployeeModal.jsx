@@ -51,13 +51,12 @@ const AddEmployeeModal = ({ onClose, onCreate }) => {
       deductions: Number(formData.deductions),
       employmentStatus: "ACTIVE",
       email: formData.email,
+      password: formData.password,
       isDeleted: false,
       user: { email: formData.email, role: formData.role },
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       image: null,
-      // password is intentionally excluded from the created record —
-      // it should go straight to your auth/create-user endpoint, never stored client-side
     }
 
     onCreate(newEmployee)

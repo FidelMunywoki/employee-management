@@ -1,21 +1,16 @@
 import { useEffect, useState, useTransition } from 'react'
 import { Link, useLocation , useNavigate} from "react-router-dom"
-import { dummyProfileData } from "../assets/assets"
+import { useAuth } from "../context/useAuth"
 import { Calendar1Icon, ChevronRightIcon, DollarSignIcon, FileTextIcon, LayoutGridIcon, LogOutIcon, Menu as MenuIcon, SettingsIcon, User as UserIcon, XIcon } from "lucide-react"
 
 const Sidebar = () => {
 
     const { pathname } = useLocation()
     const navigate = useNavigate()
-    const [userName, setUserName] = useState("")
+    const { user, isAdmin, logout } = useAuth()
     const [mobileOpen, setMobileOpen] = useState(false)
 
-    useEffect(() => {
-        // Simulate fetching user data
-        setTimeout(() => {
-            setUserName(dummyProfileData.firstName + " " + dummyProfileData.lastName)
-        }, 1000)
-    }, [])
+    const userName = user ? `${user.first_name} ${user.last_name}` : ""
 
     // Close mobile sidebar on route change only if it is open
     const [, startTransition] = useTransition()
@@ -28,12 +23,9 @@ const Sidebar = () => {
         }
     }, [pathname, mobileOpen, startTransition])
 
-    const role = "" || "EMPLOYEE"; // This should come from your auth context or API
-
     const navigationItems = [
         { name: "Dashboard", href: "/dashboard", icon: LayoutGridIcon },
-        role === "ADMIN" ? 
-        { name: "Employee", href: "/employee", icon: UserIcon } :
+        ...(isAdmin ? [{ name: "Employee", href: "/employee", icon: UserIcon }] : []),
         { name: "Attendance", href: "/attendance", icon: Calendar1Icon },
         { name: "Leave", href: "/leave", icon: FileTextIcon },
         { name: "Payslips", href: "/payslips", icon: DollarSignIcon },
@@ -41,9 +33,7 @@ const Sidebar = () => {
     ]
 
     const handleLogout = () => {
-        // Implement logout logic here (e.g., clear tokens, redirect to login page)
-        // Redirect to login page
-        console.log("User logged out")
+        logout()
         navigate("/login")
     }
 
@@ -79,7 +69,7 @@ const Sidebar = () => {
                 </div>
                 <div className='min-w-0'>
                     <p className='text-[13px] font-medium text-slate-200 truncate'>{userName || "Loading..."}</p>
-                    <p className='text-[11px] text-slate-500 truncate'>{role === "ADMIN" ? "Admin" : "Employee"}</p>
+                    <p className='text-[11px] text-slate-500 truncate'>{isAdmin ? "Admin" : "Employee"}</p>
                 </div>
             </div>
         </div>

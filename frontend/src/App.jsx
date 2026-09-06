@@ -10,6 +10,7 @@ import PrintPayslip from "./pages/PrintPayslip"
 import Settings from "./pages/Settings"
 import LoginForm from "./components/LoginForm"
 import ProtectedRoute from "./components/ProtectedRoute"
+import AdminRoute from "./components/AdminRoute"
 
 
 const App = () => {
@@ -31,6 +32,9 @@ const App = () => {
           <Route element={<Layout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/employee" element={<Employee />} />
+             <Route element={<AdminRoute />}>
+                <Route path="/employee" element={<Employee />} />
+             </Route>
             <Route path="/attendance" element={<Attendance />} />
             <Route path="/leave" element={<Leave />} />
             <Route path="/payslips" element={<Payslips />} />
