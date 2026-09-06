@@ -2,7 +2,7 @@ import AdminSettings from "../components/AdminSettings"
 import EmployeeSettings from "../components/EmployeeSettings"
 
 const Settings = () => {
-  const isAdmin = true // This should come from your auth context or API
+  const isAdmin = false // This should come from your auth context or API
 
   return (
     <div className="animate-fade-in">

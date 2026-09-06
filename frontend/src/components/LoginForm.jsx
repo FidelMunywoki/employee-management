@@ -1,9 +1,13 @@
 import { useState } from "react"
 import LoginLeftSide from "./LoginLeftSide"
-import { Link } from "react-router-dom"
-import { ArrowLeft, EyeIcon, EyeOffIcon, Loader2Icon } from "lucide-react"
+import { useNavigate } from "react-router-dom"
+import { EyeIcon, EyeOffIcon, Loader2Icon } from "lucide-react"
+import { useAuth } from "../context/useAuth"
 
-const LoginForm = ({role, title, subtitle}) => {
+const LoginForm = ({ title, subtitle }) => {
+
+    const { login } = useAuth()
+    const navigate = useNavigate()
 
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
@@ -15,28 +19,15 @@ const LoginForm = ({role, title, subtitle}) => {
         e.preventDefault()
         setError("")
         setLoading(true)
-        try { 
-            // Simulate API call
-            await new Promise((resolve) => setTimeout(resolve, 2000))
-
-            // For demo, we just check if email and password are not empty
-            if (!email || !password) {
-                throw new Error("Please enter both email and password")
-            }
+        try {
+            await login(email, password)
+            navigate("/dashboard")
         } catch (err) {
-        setError("Sign in failed. Please try again.")
-    } finally {
-        setLoading(false)
+            setError(err.message || "Sign in failed. Please try again.")
+        } finally {
+            setLoading(false)
+        }
     }
-
-            // In real implementation, you would call your API here and handle authentication
-            // Example:
-            // const response = await api.login({ email, password, role })
-            // Handle response, store tokens, redirect, etc
-
-        
-    }
- 
 
 
 
@@ -46,11 +37,6 @@ const LoginForm = ({role, title, subtitle}) => {
 
         <div className="flex-1 flex items-center justify-center p-6 sm:p-12 bg-white">
              <div className="w-full max-w-md animate-fade-in">
-            <Link to="/login" className="inline-flex items-center gap-2
-            text-slate-400 hover:text-slate-700 text-sm mb-10 transition-colors">
-            <ArrowLeft size={16} /> Back to portal selection
-            
-            </Link>
 
             <div className="mb-8">
                 <h1 className="text-2x1 sm:text-3xl font-medium text-zinc-800">{title}</h1>

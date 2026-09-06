@@ -5,34 +5,37 @@ import Employee from "./pages/Employee"
 import Attendance from "./pages/Attendance"
 import Leave from "./pages/Leave"
 import Payslips from "./pages/Payslips"
-import LoginLanding from "./pages/LoginLanding"
 import Layout from "./pages/Layout"
 import PrintPayslip from "./pages/PrintPayslip"
 import Settings from "./pages/Settings"
 import LoginForm from "./components/LoginForm"
+import ProtectedRoute from "./components/ProtectedRoute"
 
 
 const App = () => {
   return (
     <div>
-      {/* // Your app content goes here */}
-
-
       <Toaster />
       <Routes>
-        <Route path="/login" element={<LoginLanding />} />
+        <Route
+          path="/login"
+          element={
+            <LoginForm
+              title="Welcome Back"
+              subtitle="Sign in to access your account"
+            />
+          }
+        />
 
-        <Route path="/login/admin" element={<LoginForm role="admin" title="Admin Portal" subtitle="Sign in to manage the organization" />} />
-        <Route path="/login/employee" element={<LoginForm role="employee" title="Employee Portal" subtitle="Sign in to access your profile" />} />
-
-
-        <Route element={<Layout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/employee" element={<Employee />} />
-          <Route path="/attendance" element={<Attendance />} />
-          <Route path="/leave" element={<Leave />} />
-          <Route path="/payslips" element={<Payslips />} />
-          <Route path="/settings" element={<Settings />} />
+        <Route element={<ProtectedRoute />}>
+          <Route element={<Layout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/employee" element={<Employee />} />
+            <Route path="/attendance" element={<Attendance />} />
+            <Route path="/leave" element={<Leave />} />
+            <Route path="/payslips" element={<Payslips />} />
+            <Route path="/settings" element={<Settings />} />
+          </Route>
         </Route>
         <Route path="/print/payslip/:id" element={<PrintPayslip />} />
         <Route path="*" element={<Navigate to="/dashboard" replace/>} />

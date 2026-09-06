@@ -2,23 +2,13 @@ import { useState } from "react"
 import { User } from "lucide-react"
 
 const ProfileDetailsForm = ({ employee, onSave }) => {
-  const [formData, setFormData] = useState({
-    firstName: employee.firstName || "",
-    lastName: employee.lastName || "",
-    phone: employee.phone || "",
-    bio: employee.bio || "",
-  })
+  const [bio, setBio] = useState(employee.bio || "")
   const [success, setSuccess] = useState("")
-
-  const handleChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-    setSuccess("")
-  }
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    onSave({ ...employee, ...formData })
-    setSuccess("Profile updated.")
+    onSave({ ...employee, bio })
+    setSuccess("Bio updated.")
   }
 
   return (
@@ -40,18 +30,18 @@ const ProfileDetailsForm = ({ employee, onSave }) => {
             <label className="block text-sm text-slate-600 mb-1.5">First Name</label>
             <input
               type="text"
-              value={formData.firstName}
-              onChange={(e) => handleChange("firstName", e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 transition"
+              value={employee.firstName}
+              disabled
+              className="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-400 cursor-not-allowed"
             />
           </div>
           <div>
             <label className="block text-sm text-slate-600 mb-1.5">Last Name</label>
             <input
               type="text"
-              value={formData.lastName}
-              onChange={(e) => handleChange("lastName", e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 transition"
+              value={employee.lastName}
+              disabled
+              className="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-400 cursor-not-allowed"
             />
           </div>
           <div>
@@ -62,30 +52,33 @@ const ProfileDetailsForm = ({ employee, onSave }) => {
               disabled
               className="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-400 cursor-not-allowed"
             />
-            <p className="text-xs text-slate-400 mt-1">Contact an admin to change your work email.</p>
           </div>
           <div>
             <label className="block text-sm text-slate-600 mb-1.5">Phone Number</label>
             <input
               type="tel"
-              value={formData.phone}
-              onChange={(e) => handleChange("phone", e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 transition"
+              value={employee.phone || ""}
+              disabled
+              className="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-400 cursor-not-allowed"
             />
           </div>
         </div>
+        <p className="text-xs text-slate-400 -mt-2">
+          Contact an admin to update your name, email, or phone number.
+        </p>
+
         <div>
           <label className="block text-sm text-slate-600 mb-1.5">Bio</label>
           <textarea
-            value={formData.bio}
-            onChange={(e) => handleChange("bio", e.target.value)}
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
             rows={3}
             placeholder="Brief description..."
             className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 transition resize-none"
           />
         </div>
         <div className="flex justify-end pt-2">
-          <button type="submit" className="btn-primary">Save Changes</button>
+          <button type="submit" className="btn-primary">Save Bio</button>
         </div>
       </form>
     </div>

@@ -1,63 +1,108 @@
+import { useState } from "react"
 import LoginLeftSide from "../components/LoginLeftSide"
-import { Link } from "react-router-dom"
-import { ArrowRight, Shield, User } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom"
+import { ArrowLeft, EyeIcon, EyeOffIcon, Loader2Icon } from "lucide-react"
+import { useAuth } from "../context/useAuth"
 
-const LoginLanding = () => {
+const LoginForm = ({ role, title, subtitle }) => {
 
-  const portalOptions = [
-    {
-      to: "/login/admin",
-      title: "Admin Portal",
-      description: "Manage employees, departments, payroll, and system configuration.",
-      icon: Shield
-    },
-    {
-      to: "/login/employee",
-      title: "Employee Portal",
-      description: "Access your profile, view payslips, request leave, and track attendance.",
-      icon: User
+    const { login } = useAuth()
+    const navigate = useNavigate()
+    const portalLabel = role === "admin" ? "Admin portal" : "Employee portal"
+
+    const [email, setEmail] = useState("")
+    const [password, setPassword] = useState("")
+    const [showPassword, setShowPassword] = useState(false)
+    const [error, setError] = useState("")
+    const [loading, setLoading] = useState(false)
+
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+        setError("")
+        setLoading(true)
+        try {
+            await login(email, password)
+            // The account's real role decides what they see, regardless of
+            // which portal (role prop) they signed in through.
+            navigate("/dashboard")
+        } catch (err) {
+            setError(err.message || "Sign in failed. Please try again.")
+        } finally {
+            setLoading(false)
+        }
     }
-  ]
+ 
+
+
+
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
-      <LoginLeftSide /> 
+        <LoginLeftSide />
 
-      <div className="w-full md:w-1/2 flex flex-col items-center justify-center p-6 sm:p-12 lg:p-16
-      relative overflow-y-auto min-h-screen">
-        <div className="w-full max-w-md animate-fade-in relative z-10">
-          {/* Header */}
-          <div className="text-center mb-10 md:text-left">
-            <h2 className="text-3xl font-medium text-slate-900 tracking-tight mb-3">Welcome Back</h2>
-            <p className="text-slate-500">Select your portal to securely access the system</p>
-          </div>
+        <div className="flex-1 flex items-center justify-center p-6 sm:p-12 bg-white">
+             <div className="w-full max-w-md animate-fade-in">
+            <Link to="/login" className="inline-flex items-center gap-2
+            text-slate-400 hover:text-slate-700 text-sm mb-10 transition-colors">
+            <ArrowLeft size={16} /> Back to portal selection
+            
+            </Link>
 
-          {/* Portal List */}
-          <div className="space-y-4">
-            {portalOptions.map((portal) => (
-              <Link key={portal.to} to={portal.to}
-              className="group block bg-slate-50 border border-slate-200 rounded-lg 
-              p-5 sm:p-6 transition-all duration-300 hover:border-indigo-400 hover:bg-indigo-50">
-               <div className="relative z-10 flex items-center justify-between
-               gap-4 sm:gap-5">
-                <h3 className="text-lg text-slate-800 group-hover:text-indigo-600
-                mb-1 transition-colors">{portal.title}</h3>
-                <ArrowRight className="w-4 h-4 text-slate-400 
-                group-hover:text-indigo-600 group-hover:translate-x-1 transition-all" />
-                </div> 
+            <div className="mb-8">
+                <h1 className="text-2x1 sm:text-3xl font-medium text-zinc-800">{title}</h1>
+                <p className="text-slate-500 text-sm sm:text-base mt-2">{subtitle}</p>
 
-              </Link>
-            ))}
-          </div>
-          {/* Footer */}
-          <div className="mt-12 text-center md:text-left text-sm text-slate-400">
-            <p>© {new Date().getFullYear()} Techsyiq. All rights reserved.</p>
-          </div>
+                <div>
+                    {error && (
+                        <div className="mb-6 p-4 bg-rose-50 border border-rose-50 border 
+                        text-rose-700 rounded-xl text-sm flex items-start gap-3">
+                            <div className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0"/>
+                            {error}
+                        </div>
+                    )}
+
+                    <form  className= "space-y-5" onSubmit={handleSubmit} aria-label={`${portalLabel} sign in form`}>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                                Email address 
+                            </label>
+                            <input type="email" value={email} onChange={(e) => 
+                                setEmail(e.target.value)} required placeholder="johndoe@example.com"  />
+                        </div>
+
+                         <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                                Password 
+                            </label>
+                            <div className="relative">
+                                <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => 
+                                setPassword(e.target.value)} required className="pr-11" placeholder="••••••••"/>
+                                <button type='button' className="absolute right-3 top-1/2 -translate-y-1/2
+                                text-slate-400 hover:text-slate-600 transition-colors" onClick={() => setShowPassword(!showPassword)}>
+                                    {showPassword ? <EyeOffIcon size={18}/> : <EyeIcon size={18}/>}
+                                </button>
+
+                            </div>
+                            
+                        </div>
+                        <button type="submit" disabled={loading} className="w-full py-3 px-4 bg-linear-to-r 
+                        from-indigo-600 to-indigo-500  text-white rounded-md text-sm font-semibold 
+                        hover:from-indigo-700 hover:to-indigo-600 disabled:opacity-50 transition-all duration-200
+                        shadow-lg shadow-indigo-500/25 active:scale-[0.98] flex items-center justify-center">
+                            {loading && <Loader2Icon size={18} className="animate-spin h-4 w-4 mr-2"/>}
+                            {loading ? "Signing in..." : "Sign In"}
+                        </button>
+
+
+                    </form>
+                </div>
+            </div>
+
         </div>
-        
-      </div>
-
+            
+        </div>
+       
     </div>
   )
 }
 
-export default LoginLanding
+export default LoginForm
