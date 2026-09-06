@@ -22,17 +22,22 @@ backend/
 │   ├── employee.py
 │   ├── leave.py
 │   ├── payslip.py
-│   └── attendance.py
+│   ├── attendance.py
+│   └── settings.py
 ├── schemas/                 # Pydantic request/response schemas
 │   ├── auth.py
 │   ├── employee.py
 │   ├── attendance.py
-│   └── leave.py
+│   ├── leave.py
+│   ├── payslip.py
+│   └── settings.py
 ├── routes/                  # API route handlers
 │   ├── auth.py
 │   ├── employees.py
 │   ├── attendance.py
-│   └── leave.py
+│   ├── leave.py
+│   ├── payslips.py
+│   └── settings.py
 ├── dependencies/
 │   └── auth.py               # get_current_employee, require_admin
 ├── utils/
@@ -158,13 +163,17 @@ curl -X POST http://localhost:4000/api/auth/login \
 
 | Method | Endpoint | Access | Description |
 |--------|----------|--------|-------------|
-| GET | `/api/employees/` | Admin | List all employees. Query params: `search` (name/email), `department`. |
+| GET | `/api/employees/` | Admin | List and search all employees. Query params: `search` (name/email), `department`. |
 | GET | `/api/employees/{id}` | Self or Admin | Get one employee's profile. |
 | POST | `/api/employees/` | Admin | Create a new employee. Hashes the provided password; rejects duplicate email. |
-| PATCH | `/api/employees/me` | Self | Update own `first_name`, `last_name`, `phone`, `bio` only. |
-| PATCH | `/api/employees/{id}` | Admin | Full profile edit — email, department, position, salary, status, role. |
+| PATCH | `/api/employees/me` | Self | Update own **bio only**. Name, email, phone, salary, department, role, and status are admin-controlled. |
+| PATCH | `/api/employees/{id}` | Admin | Full profile edit — first/last name, email, position, bio, department, salary, status, role. |
 | DELETE | `/api/employees/{id}` | Admin | Soft delete (`is_deleted = true`). Admins can't delete their own account. |
 | POST | `/api/employees/change-password` | Authenticated (self) | Change own password. Requires `current_password` + `new_password` (min 8 chars). |
+
+**Permission model:**
+- **Admin** can view/search all employees, and update any employee's first name, last name, email, position, and bio (plus department, salary, status, and role).
+- **Employee** can only update their own **bio**, and change their own **password**. All other fields — including their own name, email, and phone — are read-only from the employee's side and require an admin to change.
 
 **Example — create employee:**
 ```bash
@@ -181,13 +190,21 @@ curl -X POST http://localhost:4000/api/employees/ \
   }'
 ```
 
+**Example — employee updates their own bio:**
+```bash
+curl -X PATCH http://localhost:4000/api/employees/me \
+  -H "Authorization: Bearer <employee_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"bio": "Full-stack developer who loves clean APIs."}'
+```
+
 ---
 
 ### Attendance — `/api/attendance`
 
 | Method | Endpoint | Access | Description |
 |--------|----------|--------|-------------|
-| POST | `/api/attendance/clock-in` | Authenticated (self) | Clock in for today. `409` if already clocked in today (enforced by app check + DB unique constraint on `employee_id + attendance_date`). Marks `LATE` if after the cutoff time. |
+| POST | `/api/attendance/clock-in` | Authenticated (self) | Clock in for today. `409` if already clocked in today (app check + DB unique constraint on `employee_id + attendance_date`). Marked `LATE` if after the configured cutoff time (see Settings). |
 | POST | `/api/attendance/clock-out` | Authenticated (self) | Clock out of today's open record. Computes `working_hours` and `day_type` (Full/Three Quarter/Half/Short Day). |
 | GET | `/api/attendance/me` | Authenticated (self) | List own attendance history, most recent first. |
 | GET | `/api/attendance/me/summary` | Authenticated (self) | Returns `days_present`, `late_arrivals`, `avg_work_hours`. |
@@ -204,7 +221,7 @@ curl -X POST http://localhost:4000/api/employees/ \
 | GET | `/api/leave/me/summary` | Authenticated (self) | Days taken by type (`sick_taken`, `casual_taken`, `annual_taken`) — counts `APPROVED` only. |
 | GET | `/api/leave/` | Admin | List all leave requests, with the requesting employee's info embedded. Optional `status` and `employee_id` filters. |
 | GET | `/api/leave/summary` | Admin | Org-wide days taken by type, `APPROVED` only. |
-| PATCH | `/api/leave/{id}/review` | Admin | Approve or reject a `PENDING` request, with an optional comment. Returns `400` if the request was already reviewed. |
+| PATCH | `/api/leave/{id}/review` | Admin | Approve or reject a `PENDING` request, with an optional comment. Returns `400` if already reviewed. |
 
 **Example — review a leave request:**
 ```bash
@@ -216,12 +233,54 @@ curl -X PATCH http://localhost:4000/api/leave/<leave_id>/review \
 
 ---
 
+### Payslips — `/api/payslips`
+
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| POST | `/api/payslips/` | Admin | Generate a payslip for an employee/month/year. `basic_salary` is pulled from the employee's current profile, not accepted as input. `409` if a payslip for that employee/period already exists. |
+| GET | `/api/payslips/me` | Authenticated (self) | List own payslips, most recent first. |
+| GET | `/api/payslips/{id}` | Self or Admin | View one payslip's full breakdown. Employees can only view their own. |
+| GET | `/api/payslips/` | Admin | List all payslips. Optional `employee_id`, `month`, `year` filters. |
+
+**Example — generate a payslip:**
+```bash
+curl -X POST http://localhost:4000/api/payslips/ \
+  -H "Authorization: Bearer <admin_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"employee_id": "<id>", "month": 3, "year": 2026, "allowances": 200, "deductions": 20}'
+```
+
+---
+
+### Settings — `/api/settings`
+
+Org-wide configuration, stored as a single settings row.
+
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| GET | `/api/settings/` | Authenticated | Read current org settings (late-arrival cutoff time, leave day allowances). Readable by everyone so the frontend can display policy info on employee-facing pages. |
+| PATCH | `/api/settings/` | Admin | Update any subset of settings fields. Tracks `updated_by` (the admin's id) and `updated_at`. |
+
+**Fields:**
+- `late_cutoff_hour` / `late_cutoff_minute` — check-ins after this time are marked `LATE` (used by `/api/attendance/clock-in`)
+- `annual_leave_days`, `casual_leave_days`, `sick_leave_days` — informational leave allowances (not yet enforced against actual usage — see Not Yet Implemented)
+
+**Example — update the late cutoff:**
+```bash
+curl -X PATCH http://localhost:4000/api/settings/ \
+  -H "Authorization: Bearer <admin_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"late_cutoff_hour": 9, "late_cutoff_minute": 30}'
+```
+
+---
+
 ## Not Yet Implemented
 
-- `/api/payslips` — list, generate, view detail (frontend currently runs on dummy data)
+- Leave allowance enforcement — `/api/leave` doesn't currently reject an application that would exceed the configured `*_leave_days` limits; those settings are informational only for now
 - Overlapping leave date validation
-- Configurable late-arrival cutoff (currently hardcoded at 9:15 AM in `routes/attendance.py`)
 - Rate limiting / brute-force protection on `/api/auth/login`
+- A centralized frontend auth context (`useAuth()`) — role-based UI branching (`isAdmin`) is currently hardcoded per-page on the frontend rather than driven by the real login/JWT flow
 
 ## Security Notes
 
