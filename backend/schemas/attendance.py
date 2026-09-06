@@ -3,6 +3,15 @@ from typing import Optional
 from pydantic import BaseModel
 
 
+class EmployeeBrief(BaseModel):
+    id: str
+    first_name: str
+    last_name: str
+    department: str
+
+    model_config = {"from_attributes": True}
+
+
 class AttendanceOut(BaseModel):
     id: str
     employee_id: str
@@ -12,6 +21,7 @@ class AttendanceOut(BaseModel):
     status: str
     working_hours: Optional[float] = None
     day_type: Optional[str] = None
+    employee: Optional[EmployeeBrief] = None
 
     model_config = {"from_attributes": True}
 

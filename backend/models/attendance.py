@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone, date
 from sqlalchemy import String, Float, Date, DateTime, ForeignKey, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from config.database import Base
 
 
@@ -25,3 +25,5 @@ class Attendance(Base):
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
+
+    employee: Mapped["Employee"] = relationship("Employee", lazy="selectin")
