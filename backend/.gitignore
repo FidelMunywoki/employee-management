@@ -15,7 +15,7 @@ __pycache__/
 alembic/__pycache__/
 
 # One-off local scripts (contains a hardcoded seed password)
-seed_admin.py
+seed_admin_1.py
 
 # Editor/OS cruft
 .vscode/
