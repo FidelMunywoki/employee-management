@@ -1,6 +1,6 @@
 # Employee Management System
 
-Full-stack Employee Management System (EMS): a React/Vite frontend and a FastAPI + PostgreSQL backend, containerized with Docker Compose. Supports two roles — **ADMIN** and **EMPLOYEE** — with JWT authentication, role-based access control, and a full backend test suite.
+Full-stack Employee Management System (EMS): a React/Vite frontend and a FastAPI + PostgreSQL backend, fully containerized with Docker Compose. Supports two roles — **ADMIN** and **EMPLOYEE** — with JWT authentication, role-based access control, and a full backend test suite.
 
 ## Tech Stack
 
@@ -15,7 +15,7 @@ Full-stack Employee Management System (EMS): a React/Vite frontend and a FastAPI
 - Plain `fetch` wrapper (`src/api/client.js`) — no axios
 
 **Infra**
-- Docker Compose (backend + PostgreSQL)
+- Docker Compose — three services: `db` (PostgreSQL), `backend` (FastAPI), `frontend` (Vite dev server)
 
 ---
 
@@ -24,27 +24,35 @@ Full-stack Employee Management System (EMS): a React/Vite frontend and a FastAPI
 ```
 employee-management/
 ├── docker-compose.yml
+├── .env                     # Compose-level secrets (Postgres creds) — gitignored
+├── .env.example
 ├── backend/
+│   ├── Dockerfile
+│   ├── .env                 # gitignored
+│   ├── .env.example
 │   ├── main.py
 │   ├── config/database.py
-│   ├── models/            # employee, leave, payslip, attendance, settings
-│   ├── schemas/            # Pydantic request/response models
-│   ├── routes/             # auth, employees, attendance, leave, payslips, settings
-│   ├── dependencies/auth.py # get_current_employee, require_admin
-│   ├── utils/security.py    # bcrypt hashing, JWT create/decode
+│   ├── models/               # employee, leave, payslip, attendance, settings
+│   ├── schemas/               # Pydantic request/response models
+│   ├── routes/                # auth, employees, attendance, leave, payslips, settings
+│   ├── dependencies/auth.py   # get_current_employee, require_admin
+│   ├── utils/security.py      # bcrypt hashing, JWT create/decode
 │   ├── alembic/
 │   ├── tests/
 │   └── requirements.txt
 └── frontend/
+    ├── Dockerfile
+    ├── .env                  # gitignored
+    ├── .env.example
     └── src/
-        ├── api/client.js           # fetch wrapper
+        ├── api/client.js            # fetch wrapper
         ├── context/
-        │   ├── authContext.js      # plain context object
-        │   ├── AuthContext.jsx     # AuthProvider
-        │   └── useAuth.js          # hook
+        │   ├── authContext.js       # plain context object
+        │   ├── AuthContext.jsx      # AuthProvider
+        │   └── useAuth.js           # hook
         ├── components/
-        │   ├── ProtectedRoute.jsx  # requires a valid token
-        │   ├── AdminRoute.jsx      # requires isAdmin, nested inside ProtectedRoute
+        │   ├── ProtectedRoute.jsx   # requires a valid token
+        │   ├── AdminRoute.jsx       # requires isAdmin, nested inside ProtectedRoute
         │   ├── LoginForm.jsx
         │   ├── Sidebar.jsx
         │   └── ... (Employee*, Attendance*, Leave*, Payslip*, Settings* components)
@@ -58,18 +66,36 @@ employee-management/
 
 ## Setup
 
-### 1. Environment variables
+There are **three separate env files**, each covering a different layer:
 
-Copy the example files and fill in real values:
+| File | Used by | Purpose |
+|---|---|---|
+| `./.env` (project root) | `docker-compose.yml` directly | Postgres credentials shared across `db` and `backend` |
+| `backend/.env` | `backend/main.py` / `config/database.py` | Only read if you ever run the backend **outside** Docker (e.g. `python main.py` locally). Compose's `environment:` block always overrides this when running via `docker compose up`. |
+| `frontend/.env` | Vite | `VITE_API_URL` — where the browser sends API requests |
+
+### 1. Create the root `.env` (for Docker Compose)
+
+```bash
+cp .env.example .env
+```
+
+`.env.example`:
+```env
+POSTGRES_USER=ems_user
+POSTGRES_PASSWORD=yourpassword
+POSTGRES_DB=employee_management
+```
+
+Compose automatically loads a file literally named `.env` sitting next to `docker-compose.yml` — no `env_file:` directive needed. Every `${POSTGRES_USER}`-style reference in `docker-compose.yml` gets substituted from this file at `docker compose up` time. Verify the substitution landed correctly:
+```bash
+docker compose config
+```
+
+### 2. Create `backend/.env`
 
 ```bash
 cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env
-```
-
-Generate a real JWT secret rather than using the placeholder:
-```bash
-python3 -c "import secrets; print(secrets.token_hex(32))"
 ```
 
 `backend/.env.example`:
@@ -82,36 +108,55 @@ JWT_ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=60
 ```
 
+Generate a real secret rather than using the placeholder:
+```bash
+python3 -c "import secrets; print(secrets.token_hex(32))"
+```
+
+Note: when running through Docker Compose, `DATABASE_URL` here is actually superseded by the `environment:` block in `docker-compose.yml` (built from the root `.env`'s Postgres values). Keep both files' credentials in sync manually, since they're two separate mechanisms pointing at the same database.
+
+### 3. Create `frontend/.env`
+
+```bash
+cp frontend/.env.example frontend/.env
+```
+
 `frontend/.env.example`:
 ```env
 VITE_API_URL=http://localhost:4000/api
 ```
 
-### 2. Run the backend
+This must stay `localhost`, not a Docker service name like `backend` — it's baked into JS that runs in your **browser**, on your host machine, which has no knowledge of Docker's internal network. `localhost:4000` works because the backend's port is published to the host via `docker-compose.yml`'s `ports:` mapping.
+
+### 4. Bring the whole stack up
 
 ```bash
 docker compose up --build
+```
+
+This starts:
+- `db` — PostgreSQL 16, persistent `pgdata` volume
+- `backend` — FastAPI on port `4000`, source-mounted for live reload
+- `frontend` — Vite dev server on port `5173`, source-mounted for hot reload (with a separate `frontend_node_modules` volume so the container's installed packages aren't clobbered by the host bind mount)
+
+### 5. Apply migrations
+
+```bash
 docker compose exec backend alembic upgrade head
 ```
 
+### 6. Seed an admin account
+
 There's no public signup route — admins create all employee accounts. Bootstrap the first admin with a one-off seed script (see `seed_admin.py` pattern used during development), inserting directly via SQLAlchemy with a bcrypt-hashed password.
 
-Verify:
+### 7. Verify
+
 ```bash
 curl http://localhost:4000
 # {"message":"Welcome to the Employee Management System API"}
 ```
-Interactive docs: `http://localhost:4000/docs`
-
-### 3. Run the frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Log in at `/login` with your seeded admin credentials.
+- Backend interactive docs: `http://localhost:4000/docs`
+- Frontend: open `http://localhost:5173`, log in with your seeded admin
 
 ---
 
@@ -254,11 +299,12 @@ All of the following now call the backend instead of `dummy*Data` from `assets.j
 - Admin-initiated password reset (only self-service change-password exists; the admin Edit Employee modal's password field was removed pending this)
 - Server-side search/filter on the Employee list page (currently fetches all employees and filters client-side)
 - Dashboard and Attendance admin stats are computed client-side from full record lists rather than via a dedicated aggregate endpoint — fine at current scale, worth revisiting if employee count grows large
+- Production-style frontend build (current `frontend/Dockerfile` runs the Vite **dev server** — hot-reload, unminified — not a static build served via nginx)
 
 ## Security Notes
 
 - Passwords hashed with bcrypt directly (no passlib) — see `backend/utils/security.py`.
 - JWTs signed with `JWT_SECRET_KEY` (HS256), expire after `ACCESS_TOKEN_EXPIRE_MINUTES`.
 - All timestamps stored timezone-aware (`TIMESTAMPTZ` in Postgres).
-- `.env` files are gitignored — never commit real secrets. Use the `.env.example` files as templates.
+- All three `.env` files (root, `backend/`, `frontend/`) are gitignored — never commit real secrets. Use the corresponding `.env.example` files as templates.
 - JWT is stored in `localStorage` on the frontend — acceptable for this project's scope; be aware this is more XSS-exposed than an httpOnly cookie would be if this ever handles more sensitive data.
