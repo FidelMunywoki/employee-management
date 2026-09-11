@@ -1,19 +1,75 @@
+import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { Printer, ArrowLeft } from "lucide-react"
-import { dummyPayslipData } from "../assets/assets"
+import { api } from "../api/client"
+import { useAuth } from "../context/useAuth"
+import Loading from "../components/Loading"
+import toast from "react-hot-toast"
 
 const monthNames = [
   "January","February","March","April","May","June",
   "July","August","September","October","November","December",
 ]
 
+const fromApi = (p) => ({
+  _id: p.id,
+  month: p.month,
+  year: p.year,
+  basicSalary: p.basic_salary,
+  allowances: p.allowances,
+  deductions: p.deductions,
+  netSalary: p.net_salary,
+  employee: p.employee
+    ? {
+        firstName: p.employee.first_name,
+        lastName: p.employee.last_name,
+        position: p.employee.position,
+        email: p.employee.email,
+      }
+    : null,
+})
+
 const PrintPayslip = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { token, loading: authLoading } = useAuth()
+  const [payslip, setPayslip] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [notFound, setNotFound] = useState(false)
 
-  const payslip = dummyPayslipData.find((p) => p._id === id)
+  useEffect(() => {
+    if (authLoading) return
 
-  if (!payslip) {
+    if (!token) {
+      navigate("/login", { replace: true })
+      return
+    }
+
+    let isActive = true
+
+    const fetchPayslip = async () => {
+      try {
+        const data = await api.get(`/payslips/${id}`, token)
+        if (isActive) setPayslip(fromApi(data))
+      } catch (err) {
+        if (isActive) {
+          setNotFound(true)
+          toast.error(err.message || "Failed to load payslip")
+        }
+      } finally {
+        if (isActive) setLoading(false)
+      }
+    }
+
+    fetchPayslip()
+    return () => {
+      isActive = false
+    }
+  }, [id, token, authLoading, navigate])
+
+  if (authLoading || loading) return <Loading />
+
+  if (notFound || !payslip) {
     return (
       <div className="max-w-2xl mx-auto py-16 text-center text-slate-400">
         <p>Payslip not found.</p>

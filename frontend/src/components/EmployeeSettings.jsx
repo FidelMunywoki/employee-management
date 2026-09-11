@@ -1,21 +1,57 @@
-import { useState } from "react"
-import { dummyEmployeeData } from "../assets/assets"
+import { useEffect, useState } from "react"
+import { api } from "../api/client"
+import { useAuth } from "../context/useAuth"
 import ProfileDetailsForm from "./ProfileDetailsForm"
 import ChangePasswordForm from "./ChangePasswordForm"
+import Loading from "./Loading"
+import toast from "react-hot-toast"
 
-// Swap for the logged-in user's real record once auth is wired up
-const CURRENT_EMPLOYEE_ID = "69b411e6f8a807df391d7b13"
+const fromApi = (e) => ({
+  _id: e.id,
+  firstName: e.first_name,
+  lastName: e.last_name,
+  email: e.email,
+  phone: e.phone,
+  bio: e.bio,
+})
 
 const EmployeeSettings = () => {
-  const [employee, setEmployee] = useState(
-    dummyEmployeeData.find((e) => e._id === CURRENT_EMPLOYEE_ID)
-  )
+  const { token } = useAuth()
+  const [employee, setEmployee] = useState(null)
+  const [loading, setLoading] = useState(true)
 
-  const handleSave = (updated) => {
-    // TODO: PATCH this to your own-profile endpoint
-    console.log("Saving own profile:", updated)
-    setEmployee(updated)
+  useEffect(() => {
+    let isActive = true
+
+    const fetchProfile = async () => {
+      try {
+        const data = await api.get("/auth/me", token)
+        if (isActive) setEmployee(fromApi(data))
+      } catch (err) {
+        if (isActive) toast.error(err.message || "Failed to load profile")
+      } finally {
+        if (isActive) setLoading(false)
+      }
+    }
+
+    fetchProfile()
+    return () => {
+      isActive = false
+    }
+  }, [token])
+
+  const handleSave = async (updated) => {
+    try {
+      const saved = await api.patch("/employees/me", { bio: updated.bio }, token)
+      setEmployee(fromApi(saved))
+      toast.success("Bio updated")
+    } catch (err) {
+      toast.error(err.message || "Failed to update bio")
+    }
   }
+
+  if (loading) return <Loading />
+  if (!employee) return null
 
   return (
     <div className="space-y-6">

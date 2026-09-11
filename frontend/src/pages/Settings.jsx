@@ -1,8 +1,9 @@
+import { useAuth } from "../context/useAuth"
 import AdminSettings from "../components/AdminSettings"
 import EmployeeSettings from "../components/EmployeeSettings"
 
 const Settings = () => {
-  const isAdmin = false // This should come from your auth context or API
+  const { isAdmin } = useAuth()
 
   return (
     <div className="animate-fade-in">

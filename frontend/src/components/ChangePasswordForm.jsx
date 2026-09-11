@@ -1,8 +1,10 @@
-
 import { useState } from "react"
 import { Lock } from "lucide-react"
+import { api } from "../api/client"
+import { useAuth } from "../context/useAuth"
 
 const ChangePasswordForm = () => {
+  const { token } = useAuth()
   const [formData, setFormData] = useState({
     currentPassword: "",
     newPassword: "",
@@ -10,6 +12,7 @@ const ChangePasswordForm = () => {
   })
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
+  const [submitting, setSubmitting] = useState(false)
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -17,7 +20,7 @@ const ChangePasswordForm = () => {
     setSuccess("")
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
 
     if (!formData.currentPassword || !formData.newPassword || !formData.confirmPassword) {
@@ -33,10 +36,23 @@ const ChangePasswordForm = () => {
       return
     }
 
-    // TODO: send { currentPassword, newPassword } to your auth/change-password endpoint
-    console.log("Password change requested")
-    setSuccess("Password updated successfully.")
-    setFormData({ currentPassword: "", newPassword: "", confirmPassword: "" })
+    setSubmitting(true)
+    try {
+      await api.post(
+        "/employees/change-password",
+        {
+          current_password: formData.currentPassword,
+          new_password: formData.newPassword,
+        },
+        token
+      )
+      setSuccess("Password updated successfully.")
+      setFormData({ currentPassword: "", newPassword: "", confirmPassword: "" })
+    } catch (err) {
+      setError(err.message || "Failed to update password.")
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -88,7 +104,9 @@ const ChangePasswordForm = () => {
           </div>
         </div>
         <div className="flex justify-end pt-2">
-          <button type="submit" className="btn-primary">Update Password</button>
+          <button type="submit" disabled={submitting} className="btn-primary disabled:opacity-50">
+            {submitting ? "Updating..." : "Update Password"}
+          </button>
         </div>
       </form>
     </div>

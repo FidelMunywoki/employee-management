@@ -1,19 +1,18 @@
 import { useMemo, useState } from "react"
 import { Search, User } from "lucide-react"
-import { dummyEmployeeData } from "../assets/assets"
 
-const EmployeeProfileSearch = ({ onSelect }) => {
+const EmployeeProfileSearch = ({ employees, loading, onSelect }) => {
   const [search, setSearch] = useState("")
 
   const results = useMemo(() => {
-    if (!search.trim()) return dummyEmployeeData
+    if (!search.trim()) return employees
     const q = search.toLowerCase()
-    return dummyEmployeeData.filter(
+    return employees.filter(
       (emp) =>
         `${emp.firstName} ${emp.lastName}`.toLowerCase().includes(q) ||
         emp.email?.toLowerCase().includes(q)
     )
-  }, [search])
+  }, [employees, search])
 
   return (
     <div className="card p-6">
@@ -34,7 +33,9 @@ const EmployeeProfileSearch = ({ onSelect }) => {
       </div>
 
       <div className="border border-slate-100 rounded-xl divide-y divide-slate-100 max-h-72 overflow-y-auto">
-        {results.length === 0 ? (
+        {loading ? (
+          <p className="text-sm text-slate-400 px-4 py-6 text-center">Loading employees...</p>
+        ) : results.length === 0 ? (
           <p className="text-sm text-slate-400 px-4 py-6 text-center">No employees found.</p>
         ) : (
           results.map((emp) => (
