@@ -21,7 +21,7 @@ const statusBadge = {
   LATE: "badge-warning",
 }
 
-const AttendanceTable = ({ records }) => {
+const AttendanceTable = ({ records, showEmployee = false }) => {
   return (
     <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
       <div className="px-6 py-5">
@@ -32,6 +32,7 @@ const AttendanceTable = ({ records }) => {
         <table className="min-w-full text-sm">
           <thead>
             <tr className="bg-slate-50 text-left text-xs font-semibold text-slate-400 uppercase tracking-wide">
+              {showEmployee && <th className="px-6 py-3">Employee</th>}
               <th className="px-6 py-3">Date</th>
               <th className="px-6 py-3">Check In</th>
               <th className="px-6 py-3">Check Out</th>
@@ -43,7 +44,7 @@ const AttendanceTable = ({ records }) => {
           <tbody>
             {records.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-6 py-10 text-center text-slate-400">
+                <td colSpan={showEmployee ? 7 : 6} className="px-6 py-10 text-center text-slate-400">
                   No attendance records yet.
                 </td>
               </tr>
@@ -52,6 +53,13 @@ const AttendanceTable = ({ records }) => {
                 const dayType = getDayTypeDisplay(record)
                 return (
                   <tr key={record._id} className="border-t border-slate-100">
+                    {showEmployee && (
+                      <td className="px-6 py-4 font-medium text-slate-800">
+                        {record.employee
+                          ? `${record.employee.firstName} ${record.employee.lastName}`
+                          : "—"}
+                      </td>
+                    )}
                     <td className="px-6 py-4 font-medium text-slate-800">
                       {formatDate(record.date)}
                     </td>
