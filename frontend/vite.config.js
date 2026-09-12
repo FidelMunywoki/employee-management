@@ -8,6 +8,8 @@ export default defineConfig({
     tailwindcss()
   ],
   server: {
+    host: '0.0.0.0',
+    allowedHosts: ['employee-management-system-2rbb.onrender.com'],
     watch: {
       ignored: ['**/node_modules/**', '**/.git/**'],
       usePolling: false,
