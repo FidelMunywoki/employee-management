@@ -24,4 +24,13 @@ class EmployeeOut(BaseModel):
     position: str
 
     model_config = {"from_attributes": True}
+
+
+class SetupAdminRequest(BaseModel):
+    email: EmailStr
+    password: str
+    first_name: str = "Admin"
+    last_name: str = "User"
+    department: str = "Administration"
+    position: str = "Administrator"
         
